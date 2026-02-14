@@ -1,0 +1,13 @@
+# AntiGravity (AG) Core Rules & Guidelines
+
+## 1. Tek Doğru Kaynağı (Ground Truth)
+- Projenin tek kaynağı ve ana planı `roadmap.md` dosyasıdır. Yeni özellik eklemeden veya görev tamamlamadan önce bu dosyayı referans al.
+- Paydaş (Selcan) tarafından onaylanmayan majör değişiklikleri uygulama.
+
+## 2. Hata Çözümleme Protokolü (STRICT RULE)
+- KESİNLİKLE kör atış (guesswork) veya deneme-yanılma ile çözüm kodu üretme.
+- Sebebi bilinmeyen bir hata (error/bug/crash) veya eksiklik durumunda önce hatayı "investigate" et.
+- Çözüm önermeden önce kök nedeni (root cause) paydaşa raporla. Onay aldıktan sonra çözüme geç.
+
+## 3. Geliştirme Standartları
+- Kodları modüler yaz. Görevleri alt görevlere böl. Tamamlanan işleri `roadmap.md`'ye işle.

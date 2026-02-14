@@ -1,249 +1,234 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Navigation Logic ---
-    const navItems = document.querySelectorAll('.nav-item');
-    const sections = document.querySelectorAll('.dashboard-section');
 
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
-            sections.forEach(section => section.classList.remove('active'));
-            const targetId = item.getAttribute('data-target');
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) targetSection.classList.add('active');
-        });
+    // --- Cursor Trail (Subtle) ---
+    const trailContainer = document.getElementById('cursor-trail');
+    document.addEventListener('mousemove', (e) => {
+        if (Math.random() > 0.5) return; // Reduce particles for subtler effect
+        const dot = document.createElement('div');
+        dot.className = 'cursor-dot';
+        dot.style.left = `${e.clientX}px`;
+        dot.style.top = `${e.clientY}px`;
+        trailContainer.appendChild(dot);
+        setTimeout(() => dot.remove(), 500);
     });
 
-    // --- Data Management (LocalStorage) ---
+    // --- Data Management ---
     class StorageManager {
-        static getTasks() {
-            return JSON.parse(localStorage.getItem('dailyTasks')) || {};
-        }
-
-        static saveTasks(tasks) {
-            localStorage.setItem('dailyTasks', JSON.stringify(tasks));
-        }
-
-        static getProjects() {
-            return JSON.parse(localStorage.getItem('projects')) || [
-                { id: 1, title: 'selcan.store', desc: 'Expiry: Feb 2027', link: '#', icon: '🌐' },
-                { id: 2, title: 'Render & GitHub Pages', desc: 'Hosting Platforms', link: '#', icon: '☁️' },
-                { id: 3, title: 'GitHub Repos', desc: 'Source Code', link: '#', icon: '🐙' }
-            ];
-        }
-
-        static saveProjects(projects) {
-            localStorage.setItem('projects', JSON.stringify(projects));
-        }
+        static getData(key) { return JSON.parse(localStorage.getItem(key)) || {}; }
+        static saveData(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+        static getProjects() { return JSON.parse(localStorage.getItem('projects')) || []; }
+        static saveProjects(data) { localStorage.setItem('projects', JSON.stringify(data)); }
     }
 
-    // --- Calendar & Daily Tasks ---
+    // --- Calendar & Lists ---
     let currentDate = new Date();
     let selectedDate = new Date();
-
     const calendarGrid = document.getElementById('calendarGrid');
-    const monthYearDisplay = document.getElementById('monthYear');
-    const prevMonthBtn = document.getElementById('prevMonth');
-    const nextMonthBtn = document.getElementById('nextMonth');
-
-    const taskList = document.getElementById('taskList');
+    const monthYear = document.getElementById('monthYear');
     const selectedDateTitle = document.getElementById('selectedDateTitle');
-    const newTaskInput = document.getElementById('newTaskInput');
-    const addTaskBtn = document.getElementById('addTaskBtn');
 
-    function formatDateKey(date) {
-        return date.toISOString().split('T')[0];
-    }
+    function formatDateKey(date) { return date.toISOString().split('T')[0]; }
 
     function renderCalendar(date) {
         calendarGrid.innerHTML = '';
         const year = date.getFullYear();
         const month = date.getMonth();
-
-        monthYearDisplay.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        monthYear.textContent = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-        // Day Headers
-        const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-        days.forEach(day => {
-            const el = document.createElement('div');
-            el.className = 'calendar-day-header';
-            el.textContent = day;
-            calendarGrid.appendChild(el);
+        ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(d => {
+            const h = document.createElement('div');
+            h.className = 'calendar-day-header';
+            h.textContent = d;
+            calendarGrid.appendChild(h);
         });
 
-        // Empty slots
-        for (let i = 0; i < firstDay; i++) {
-            calendarGrid.appendChild(document.createElement('div'));
-        }
+        for (let i = 0; i < firstDay; i++) calendarGrid.appendChild(document.createElement('div'));
 
-        // Days
-        const allTasks = StorageManager.getTasks();
+        const tasks = StorageManager.getData('dailyTasks');
+        const shop = StorageManager.getData('shoppingList');
         const today = new Date();
 
         for (let i = 1; i <= daysInMonth; i++) {
             const d = new Date(year, month, i);
-            const dateKey = formatDateKey(d);
-
+            const key = formatDateKey(d);
             const el = document.createElement('div');
             el.className = 'calendar-day';
             el.textContent = i;
 
-            if (dateKey === formatDateKey(today)) el.classList.add('today');
-            if (dateKey === formatDateKey(selectedDate)) el.classList.add('selected');
-            if (allTasks[dateKey] && allTasks[dateKey].length > 0) el.classList.add('has-task');
+            if (key === formatDateKey(today)) el.classList.add('today');
+            if (key === formatDateKey(selectedDate)) el.classList.add('selected');
+            if ((tasks[key] && tasks[key].length) || (shop[key] && shop[key].length)) el.classList.add('has-task');
 
             el.addEventListener('click', () => {
                 selectedDate = d;
-                renderCalendar(currentDate); // Re-render to update selection
-                renderTasks();
+                renderCalendar(currentDate);
+                renderAllLists();
             });
-
             calendarGrid.appendChild(el);
         }
     }
 
-    function renderTasks() {
-        taskList.innerHTML = '';
-        const dateKey = formatDateKey(selectedDate);
+    function renderList(containerId, storageKey) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        const key = formatDateKey(selectedDate);
         selectedDateTitle.textContent = selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-        const allTasks = StorageManager.getTasks();
-        const tasks = allTasks[dateKey] || [];
+        const data = StorageManager.getData(storageKey);
+        const items = data[key] || [];
 
-        tasks.forEach((task, index) => {
-            const taskEl = document.createElement('label');
-            taskEl.className = 'task-item';
-
-            taskEl.innerHTML = `
-                <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                <span class="checkmark"></span>
-                <span class="task-text">${task.text}</span>
-                <button class="delete-btn" title="Delete Task">🗑️</button>
-            `;
-
-            // Toggle Check
-            const checkbox = taskEl.querySelector('input');
-            checkbox.addEventListener('change', () => {
-                allTasks[dateKey][index].completed = checkbox.checked;
-                StorageManager.saveTasks(allTasks);
-            });
-
-            // Delete Task
-            const deleteBtn = taskEl.querySelector('.delete-btn');
-            deleteBtn.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent label click
-                allTasks[dateKey].splice(index, 1);
-                // Clean up empty date keys
-                if (allTasks[dateKey].length === 0) delete allTasks[dateKey];
-                StorageManager.saveTasks(allTasks);
-                renderCalendar(currentDate); // Update dots
-                renderTasks();
-            });
-
-            taskList.appendChild(taskEl);
-        });
-    }
-
-    function addTask() {
-        const text = newTaskInput.value.trim();
-        if (!text) return;
-
-        const dateKey = formatDateKey(selectedDate);
-        const allTasks = StorageManager.getTasks();
-
-        if (!allTasks[dateKey]) allTasks[dateKey] = [];
-        allTasks[dateKey].push({ text, completed: false });
-
-        StorageManager.saveTasks(allTasks);
-        newTaskInput.value = '';
-        renderTasks();
-        renderCalendar(currentDate); // Update dots
-    }
-
-    addTaskBtn.addEventListener('click', addTask);
-    newTaskInput.addEventListener('keypress', (e) => e.key === 'Enter' && addTask());
-
-    prevMonthBtn.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        renderCalendar(currentDate);
-    });
-
-    nextMonthBtn.addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        renderCalendar(currentDate);
-    });
-
-    // --- Dynamic Project Manager ---
-    const projectGrid = document.getElementById('projectGrid');
-    const modal = document.getElementById('projectModal');
-    const addProjectBtn = document.getElementById('addProjectBtn'); // This is the card button
-    const closeModal = document.querySelector('.close-modal');
-    const projectForm = document.getElementById('projectForm');
-
-    function renderProjects() {
-        const projects = StorageManager.getProjects();
-        // Clear existing projects but keep the "Add Project" button (which is last)
-        // Actually simpler to clear all and re-append "Add Project" button or filter
-
-        // Save the add button
-        const addBtn = document.getElementById('addProjectBtn');
-        projectGrid.innerHTML = '';
-
-        projects.forEach(proj => {
-            const el = document.createElement('div');
-            el.className = 'project-card';
+        items.forEach((item, idx) => {
+            const el = document.createElement('label');
+            el.className = 'task-item';
             el.innerHTML = `
-                <div class="card-icon">${proj.icon}</div>
-                <h3>${proj.title}</h3>
-                <p>${proj.desc}</p>
-                <a href="${proj.link}" class="card-link" target="_blank">Open Link</a>
-                <button class="delete-btn" style="position: absolute; top: 10px; right: 10px;">🗑️</button>
+                <input type="checkbox" ${item.completed ? 'checked' : ''}>
+                <span class="task-text">${item.text}</span>
+                <span class="delete-btn" style="color:#ff4d4d; font-size:0.8rem;">✕</span>
             `;
-
-            // Delete Project
-            el.querySelector('.delete-btn').addEventListener('click', () => {
-                if (confirm('Delete this project?')) {
-                    const newProjects = projects.filter(p => p.id !== proj.id);
-                    StorageManager.saveProjects(newProjects);
-                    renderProjects();
+            el.querySelector('input').addEventListener('change', (e) => {
+                data[key][idx].completed = e.target.checked;
+                StorageManager.saveData(storageKey, data);
+                if (e.target.checked) {
+                    el.classList.add('completed');
+                    // Confetti Trigger
+                    if (typeof confetti === 'function') {
+                        confetti({
+                            particleCount: 100,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#2ecc71', '#3498db', '#9b59b6'],
+                            disableForReducedMotion: true
+                        });
+                    }
+                } else {
+                    el.classList.remove('completed');
                 }
             });
-
-            projectGrid.appendChild(el);
+            el.querySelector('.delete-btn').addEventListener('click', (e) => {
+                e.preventDefault();
+                data[key].splice(idx, 1);
+                StorageManager.saveData(storageKey, data);
+                renderAllLists();
+                renderCalendar(currentDate);
+            });
+            container.appendChild(el);
         });
-
-        projectGrid.appendChild(addBtn); // Append the button back
     }
 
-    addProjectBtn.addEventListener('click', () => modal.style.display = "block");
-    closeModal.addEventListener('click', () => modal.style.display = "none");
-    window.addEventListener('click', (e) => {
-        if (e.target == modal) modal.style.display = "none";
-    });
+    function renderAllLists() {
+        renderList('taskList', 'dailyTasks');
+        renderList('shoppingList', 'shoppingList');
+    }
 
-    projectForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+    function addItem(inputId, storageKey) {
+        const input = document.getElementById(inputId);
+        const val = input.value.trim();
+        if (!val) return;
+        const key = formatDateKey(selectedDate);
+        const data = StorageManager.getData(storageKey);
+        if (!data[key]) data[key] = [];
+        data[key].push({ text: val, completed: false });
+        StorageManager.saveData(storageKey, data);
+        input.value = '';
+        renderAllLists();
+        renderCalendar(currentDate);
+    }
+
+    document.getElementById('prevMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(currentDate); };
+    document.getElementById('nextMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(currentDate); };
+
+    document.getElementById('addTaskBtn').onclick = () => addItem('newTaskInput', 'dailyTasks');
+    document.getElementById('newTaskInput').onkeypress = (e) => e.key === 'Enter' && addItem('newTaskInput', 'dailyTasks');
+    document.getElementById('addShoppingBtn').onclick = () => addItem('newShoppingInput', 'shoppingList');
+    document.getElementById('newShoppingInput').onkeypress = (e) => e.key === 'Enter' && addItem('newShoppingInput', 'shoppingList');
+
+    // --- Toggles ---
+    const tTasks = document.getElementById('showTasksBtn');
+    const tShop = document.getElementById('showShoppingBtn');
+    const vTasks = document.getElementById('taskListView');
+    const vShop = document.getElementById('shoppingListView');
+
+    tTasks.onclick = () => { tTasks.classList.add('active'); tShop.classList.remove('active'); vTasks.classList.add('active'); vShop.classList.remove('active'); };
+    tShop.onclick = () => { tShop.classList.add('active'); tTasks.classList.remove('active'); vShop.classList.add('active'); vTasks.classList.remove('active'); };
+
+    // --- Projects ---
+    const projGrid = document.getElementById('projectGrid');
+    const modal = document.getElementById('projectModal');
+
+    function renderProjects() {
+        projGrid.innerHTML = '';
         const projects = StorageManager.getProjects();
-        const newProject = {
+        projects.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'project-card';
+            el.innerHTML = `<h3>${p.icon} ${p.title}</h3><p>${p.desc}</p><a href="${p.link}" target="_blank" class="card-link">Open</a>`;
+            // Simplified delete for bento layout? maybe on long press or right click. 
+            // For now, let's just make them view only to keep it clean, or add a remove button
+            const del = document.createElement('span');
+            del.innerHTML = '✕';
+            del.style.cssText = 'position:absolute; top:5px; right:10px; cursor:pointer; color:#ff4d4d;';
+            del.onclick = (e) => {
+                e.preventDefault();
+                if (confirm('Delete?')) {
+                    StorageManager.saveProjects(projects.filter(x => x.id !== p.id));
+                    renderProjects();
+                }
+            };
+            el.appendChild(del);
+            projGrid.appendChild(el);
+        });
+    }
+
+    document.getElementById('triggerAddProject').onclick = () => { modal.style.display = 'grid'; };
+    document.querySelector('.close-modal').onclick = () => { modal.style.display = 'none'; };
+    document.getElementById('projectForm').onsubmit = (e) => {
+        e.preventDefault();
+        const arr = StorageManager.getProjects();
+        arr.push({
             id: Date.now(),
             title: document.getElementById('projTitle').value,
             desc: document.getElementById('projDesc').value,
             link: document.getElementById('projLink').value,
-            icon: document.getElementById('projIcon').value || '🚀'
-        };
-        projects.push(newProject);
-        StorageManager.saveProjects(projects);
-
-        projectForm.reset();
-        modal.style.display = "none";
+            icon: document.getElementById('projIcon').value
+        });
+        StorageManager.saveProjects(arr);
+        modal.style.display = 'none';
         renderProjects();
+        document.getElementById('projectForm').reset();
+    };
+
+    // --- Notes ---
+    const noteMenu = document.getElementById('noteMenu');
+    document.getElementById('hamburgerBtn').onclick = () => noteMenu.classList.add('open');
+    document.querySelector('.close-note').onclick = () => noteMenu.classList.remove('open');
+    const noteArea = document.getElementById('quickNoteArea');
+    noteArea.value = localStorage.getItem('quickNote') || '';
+    noteArea.oninput = () => localStorage.setItem('quickNote', noteArea.value);
+
+    // --- Backup / Export Data ---
+    document.getElementById('backupBtn').addEventListener('click', () => {
+        const data = {
+            dailyTasks: StorageManager.getData('dailyTasks'),
+            shoppingList: StorageManager.getData('shoppingList'),
+            projects: StorageManager.getProjects(),
+            quickNote: localStorage.getItem('quickNote')
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `selcan_backup_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     });
 
-    // --- Initialization ---
+    // Init
     renderCalendar(currentDate);
-    renderTasks();
+    renderAllLists();
     renderProjects();
 });
