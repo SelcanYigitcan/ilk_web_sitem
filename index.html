@@ -1,52 +1,156 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Selcan Yiğitcan | Women in Business</title>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
-    
+    <title>Selcan's Digital Headquarters</title>
     <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
+
 <body>
 
-    <header>
-        <p class="subtitle">Women in Tech & Business</p>
-        <h1>Selcan Yiğitcan</h1>
-        <p>Geleceği Kodlayan, Sınırları Zorlayan.</p>
-    </header>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="profile-section">
+                <div class="profile-icon">👩‍💻</div>
+                <h1>Selcan's Hub</h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-target="java-lab">
+                    <span class="icon">☕</span> Java Lab
+                </button>
+                <button class="nav-item" data-target="english-corner">
+                    <span class="icon">🇬🇧</span> English Corner
+                </button>
+                <button class="nav-item" data-target="project-manager">
+                    <span class="icon">🚀</span> Project Manager
+                </button>
+                <button class="nav-item" data-target="daily-tasks">
+                    <span class="icon">✅</span> Daily Tasks
+                </button>
+            </nav>
+        </aside>
 
-    <main class="cv-section">
-        <div class="cv-grid">
-            <div class="left-col">
-                <h2>Yetenekler</h2>
-                <div class="skills">
-                    <span class="skill-tag">Java Development</span>
-                    <span class="skill-tag">Web Design (UI/UX)</span>
-                    <span class="skill-tag">Technical Writing</span>
+        <!-- Main Content -->
+        <main class="content-area">
+
+            <!-- Java Lab Section -->
+            <section id="java-lab" class="dashboard-section active">
+                <header class="section-header">
+                    <h2>Java Lab ☕</h2>
+                    <p>Track your coding journey.</p>
+                </header>
+                <div class="progress-container">
+                    <div class="progress-item">
+                        <div class="progress-info">
+                            <span>Loops (Döngüler)</span>
+                            <span>100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%; background-color: var(--neon-green);"></div>
+                        </div>
+                    </div>
+                    <!-- More progress items can be added here -->
+                    <div class="progress-item">
+                        <div class="progress-info">
+                            <span>Methods (Metotlar)</span>
+                            <span>80%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 80%; background-color: var(--soft-pink);"></div>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <div class="progress-info">
+                            <span>OOP (Nesne Yönelimli Programlama)</span>
+                            <span>20%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 20%; background-color: var(--neon-purple);"></div>
+                        </div>
+                    </div>
                 </div>
-                
-                <h2 style="margin-top: 30px;">İletişim</h2>
-                <p>📧 merhaba@selcan.store</p>
-                <p>📍 İstanbul, Türkiye</p>
-            </div>
-            
-            <div class="right-col">
-                <h2>Vizyonum</h2>
-                <p>Teknoloji dünyasında daha fazla kadının yer alması için çalışıyor, Java ve modern web teknolojileri üzerine kendimi geliştiriyorum.</p>
-                
-                <h2>Eğitim & Hedefler</h2>
-                <p><strong>Java Kampı:</strong> Nesne Yönelimli Programlama üzerine derinlemesine çalışma.</p>
-                
-                <a href="mailto:merhaba@selcan.store" class="btn-contact">İş Birliği İçin Yazın</a>
-            </div>
+            </section>
+
+
+
+            <!-- Project Manager Section -->
+            <section id="project-manager" class="dashboard-section">
+                <header class="section-header">
+                    <h2>Project Manager 🚀</h2>
+                    <p>Manage your domains and deployments.</p>
+                </header>
+                <div class="project-grid" id="projectGrid">
+                    <!-- Projects will be injected here by JS -->
+
+                    <!-- Add Project Button -->
+                    <div class="project-card add-project-card" id="addProjectBtn">
+                        <div class="card-icon" style="color: var(--neon-green)">+</div>
+                        <h3>Add Project</h3>
+                        <p>Track a new project</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Tasks Section -->
+            <section id="daily-tasks" class="dashboard-section">
+                <header class="section-header">
+                    <h2>Daily Tasks & Calendar 📅</h2>
+                    <p>Stay productive every day.</p>
+                </header>
+
+                <div class="tasks-wrapper">
+                    <!-- Calendar Side -->
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <button id="prevMonth" class="nav-btn">&lt;</button>
+                            <h3 id="monthYear">September 2023</h3>
+                            <button id="nextMonth" class="nav-btn">&gt;</button>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- Days generated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Tasks Side -->
+                    <div class="day-tasks-container">
+                        <h3 id="selectedDateTitle">Select a date</h3>
+                        <div class="add-task-box">
+                            <input type="text" id="newTaskInput" placeholder="Add a new task...">
+                            <button id="addTaskBtn">+</button>
+                        </div>
+                        <div class="checklist-container" id="taskList">
+                            <!-- Tasks generated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Add Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Add New Project</h2>
+            <form id="projectForm">
+                <input type="text" id="projTitle" placeholder="Project Name" required>
+                <input type="text" id="projDesc" placeholder="Description (e.g. Expiry Date)" required>
+                <input type="url" id="projLink" placeholder="Link URL" required>
+                <input type="text" id="projIcon" placeholder="Icon (e.g. 🚀, 🌐)" value="🚀">
+                <button type="submit" class="save-btn">Save Project</button>
+            </form>
         </div>
-    </main>
+    </div>
 
-    <footer style="text-align: center; padding: 40px; color: #636e72;">
-        &copy; 2026 Selcan.store | Designed with Power
-    </footer>
-
+    <script src="style.js"></script>
 </body>
+
 </html>
